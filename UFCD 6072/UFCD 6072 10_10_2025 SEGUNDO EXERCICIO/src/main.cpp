@@ -1,62 +1,68 @@
 #include <Arduino.h>
+//estrutura temporizador
+struct Temporizador
+{
+  unsigned long int tempo_anterior;
+  unsigned long int intervalo;
+  
+};
+//estrutura rele 
+struct rele
+{
+  int valor;//valor do rele
+  int periferico;//pino do rele
+  Temporizador temporizador;//estrutura temporizador
+};
+rele rele1;// 1 rele
+rele rele2;// 2 rele
 
-// Estrutura para temporizador
-typedef struct {
-  unsigned long intervalo;
-  unsigned long tempoAnterior;
-  bool estado;
-  int pino;
-} Temporizador;
 
-// Relés nos pinos 8 e 9, alternam a cada 10 segundos
-Temporizador rele1 = {10000, 0, false, 8};
-Temporizador rele2 = {10000, 0, false, 9};
-
-void setup() {
+void setup()
+{
   Serial.begin(9600);
-  pinMode(rele1.pino, OUTPUT);
-  pinMode(rele2.pino, OUTPUT);
+  rele1.temporizador.intervalo = 5000; //5 segundos
+  rele2.temporizador.intervalo = 10000;//10 segundos
+  rele1.temporizador.tempo_anterior = millis();//inicia o tempo anterior com o tempo atual
+  rele2.temporizador.tempo_anterior = millis();//inicia o tempo anterior com o tempo atual
+  rele1.periferico = 12;//pino do rele 1
+  rele2.periferico = 11;//pino do rele 2
+  pinMode(rele1.periferico, OUTPUT);//configura o pino do rele 1 como saída
+  pinMode(rele2.periferico, OUTPUT);//configura o pino do rele 2 como saída
+
+  digitalWrite(rele1.periferico, LOW);// OS RELES COMEÇAM DESLIGADOR 
+  digitalWrite(rele2.periferico, LOW);// OS RELES COMEÇAM DESLIGADOR
 }
 
-void loop() {
-  unsigned long tempoAtual = millis();
-
-  // Temporizador do relé 1
-  if (tempoAtual - rele1.tempoAnterior >= rele1.intervalo) {
-    rele1.estado = !rele1.estado;
-    digitalWrite(rele1.pino, rele1.estado ? HIGH : LOW);
-    Serial.println(rele1.estado ? "RUFINO ligou o Relé 1!" : "RUFINO desligou o Relé 1!");
-    rele1.tempoAnterior = tempoAtual;
+void loop()
+{
+  if (millis() - rele1.temporizador.tempo_anterior > rele1.temporizador.intervalo)
+  {
+    Serial.println("RUFINO DEU O COMANDO PARA RELE 1 LIGADO");
+    // alterna o estado do rele1
+    if (digitalRead(rele1.periferico) == LOW)//se o rele estiver desligado
+    {
+      digitalWrite(rele1.periferico, HIGH);//liga o rele
+    }
+    else
+    {
+      digitalWrite(rele1.periferico, LOW);//desliga o rele
+    }
+    rele1.temporizador.tempo_anterior = millis();//atualiza o tempo anterior
   }
 
-  // Temporizador do relé 2
-  if (tempoAtual - rele2.tempoAnterior >= rele2.intervalo) {
-    rele2.estado = !rele2.estado;
-    digitalWrite(rele2.pino, rele2.estado ? HIGH : LOW);
-    Serial.println(rele2.estado ? "RUFINO ligou o Relé 2!" : "RUFINO desligou o Relé 2!");
-    rele2.tempoAnterior = tempoAtual;
-  }
+
+  if (millis() - rele2.temporizador.tempo_anterior > rele2.temporizador.intervalo)//se o tempo atual - tempo anterior for maior que o intervalo do rele2
+  {
+    Serial.println("RUFINO DEU O COMANDO PARA RELE 2 LIGADO");//mensagem no monitor serial
+   
+    if (digitalRead(rele2.periferico) == LOW)//se o rele2 estiver desligado
+    {
+      digitalWrite(rele2.periferico, HIGH);//liga o rele2
+    }
+    else//se o rele2 estiver ligado
+    {
+      digitalWrite(rele2.periferico, LOW);//desliga o rele2
+    }
+    rele2.temporizador.tempo_anterior = millis();//atualiza o tempo anterior
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}// fim do loop
