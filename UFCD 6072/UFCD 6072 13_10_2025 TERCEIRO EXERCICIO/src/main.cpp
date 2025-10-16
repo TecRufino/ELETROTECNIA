@@ -1,100 +1,57 @@
 #include <Arduino.h>
-//estrutura temporizador
-struct Temporizador
-{
-  unsigned long int tempo_anterior;
-  unsigned long int intervalo;
-  
+
+// Estrutura para relé
+struct Rele {
+  int valor;       
+  int periferico;  
 };
-//estrutura rele 
-struct rele
-{
-  int valor;//valor do rele
-  int periferico;//pino do rele
-  Temporizador temporizador;//estrutura temporizador
-};
-rele rele1;// 1 rele
-rele rele2;// 2 rele
-rele rele3;// 3 rele
 
+Rele reles[4]; // Array de 4 relés
+int botoes[4] = {A0, A1, A2, A3}; // Pinos dos botões
+int estados[4] = {LOW, LOW, LOW, LOW}; // Estados dos relés
+int botoesAnteriores[4] = {HIGH, HIGH, HIGH, HIGH}; // Estados anteriores dos botões
 
-
-
-
-void setup()
-{
+void setup() {
   Serial.begin(9600);
-  rele1.temporizador.intervalo = 5000; //5 segundos
-  rele2.temporizador.intervalo = 7000;//10 segundos
-  rele3.temporizador.intervalo = 9000;//15 segundos
-  rele1.temporizador.tempo_anterior = millis();//inicia o tempo anterior com o tempo atual
-  rele2.temporizador.tempo_anterior = millis();//inicia o tempo anterior com o tempo atual
-  rele3.temporizador.tempo_anterior = millis();//inicia o tempo anterior com o tempo atual
-  rele1.periferico = 12;//pino do rele 1
-  rele2.periferico = 11;//pino do rele 2
-  rele3.periferico = 10;//pino do rele 3
-  pinMode(rele1.periferico, OUTPUT);//configura o pino do rele 1 como saída
-  pinMode(rele2.periferico, OUTPUT);//configura o pino do rele 2 como saída
-  pinMode(rele3.periferico, OUTPUT);//configura o pino do rele 3 como saída
 
-  digitalWrite(rele1.periferico, LOW);// OS RELES COMEÇAM DESLIGADOR 
-  digitalWrite(rele2.periferico, LOW);// OS RELES COMEÇAM DESLIGADOR
-  digitalWrite(rele3.periferico, LOW);// OS RELES COMEÇAM DESLIGADOR
-}
+  // Define os pinos dos relés
+  reles[0].periferico = 12;
+  reles[1].periferico = 11;
+  reles[2].periferico = 10;
+  reles[3].periferico = 9;
 
-
-
-void loop()
-{
-  if (millis() - rele1.temporizador.tempo_anterior > rele1.temporizador.intervalo)
-  {
-    Serial.println("RUFINO DEU O COMANDO PARA RELE 1 LIGADO");
-    // alterna o estado do rele1
-    if (digitalRead(rele1.periferico) == LOW)//se o rele estiver desligado
-    {
-      digitalWrite(rele1.periferico, HIGH);//liga o rele
-    }
-    else
-    {
-      digitalWrite(rele1.periferico, LOW);//desliga o rele
-    }
-    rele1.temporizador.tempo_anterior = millis();//atualiza o tempo anterior
+  // Configura os pinos dos relés como saída
+  for (int i = 0; i < 4; i++) {
+    pinMode(reles[i].periferico, OUTPUT);
+    digitalWrite(reles[i].periferico, LOW);
   }
 
-
-
-
-
-  if (millis() - rele2.temporizador.tempo_anterior > rele2.temporizador.intervalo)//se o tempo atual - tempo anterior for maior que o intervalo do rele2
-  {
-    Serial.println("RUFINO DEU O COMANDO PARA RELE 2 LIGADO");//mensagem no monitor serial
-   
-    if (digitalRead(rele2.periferico) == LOW)//se o rele2 estiver desligado
-    {
-      digitalWrite(rele2.periferico, HIGH);//liga o rele2
-    }
-    else//se o rele2 estiver ligado
-    {
-      digitalWrite(rele2.periferico, LOW);//desliga o rele2
-    }
-    rele2.temporizador.tempo_anterior = millis();//atualiza o tempo anterior
+  // Configura os pinos dos botões como entrada 
+  for (int i = 0; i < 4; i++) {
+    pinMode(botoes[i], INPUT_PULLUP);
+  }
 }
 
-if (millis() - rele3.temporizador.tempo_anterior > rele3.temporizador.intervalo)//se o tempo atual - tempo anterior for maior que o intervalo do rele3
-{ 
-  Serial.println("RUFINO DEU O COMANDO PARA RELE 3 LIGADO");//mensagem no monitor serial
+void loop() {
+  for (int i = 0; i < 4; i++) {
+    int leituraBotao = digitalRead(botoes[i]);
 
-  if(digitalRead(rele3.periferico) == LOW)//se o rele3 estiver desligado
-  {
-    digitalWrite(rele3.periferico, HIGH);//liga o rele3
+    // transição de HIGH para LOW
+    if (botoesAnteriores[i] == HIGH && leituraBotao == LOW) {
+      estados[i] = (estados[i] == LOW) ? HIGH : LOW;
+      digitalWrite(reles[i].periferico, estados[i]);
+
+      
+      Serial.print("RUFINO deu o comando ");
+      Serial.print(i + 1);
+      Serial.print(", ");
+      Serial.print((estados[i] == HIGH) ? "ligou" : "desligou");
+      Serial.print(" rele ");
+      Serial.println(i + 1);
+
+      delay(200); 
+    }
+
+    botoesAnteriores[i] = leituraBotao;
   }
-  else//se o rele3 estiver ligado
-  {
-    digitalWrite(rele3.periferico, LOW);//desliga o rele3
-  }
-  
-  rele3.temporizador.tempo_anterior = millis();//atualiza o tempo anterior
-  /* code */
 }
-
-} 
