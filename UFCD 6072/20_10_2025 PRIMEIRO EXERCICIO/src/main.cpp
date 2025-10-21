@@ -53,7 +53,7 @@ void loop() {
         delay(10); // pequena pausa para evitar travamento
       }
 
-      delay(200); // debounce simples
+      delay(200); 
     }
 
     botoesAnteriores[i] = leituraBotao;
